@@ -37,7 +37,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await BookingService.createBooking(
+    final result = await BookingService.createBooking(
       packageId: widget.package.id,
       seats: _seats,
       travelDate: _selectedDate.toIso8601String().split('T')[0],
@@ -47,21 +47,19 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
 
+      final success = result['success'] as bool;
+      final message = result['message'] as String;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: success ? Colors.green : Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking created successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
         Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to create booking'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -221,11 +219,40 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
             ),
             const SizedBox(height: 24),
 
+            // No seats warning
+            if (widget.package.availableSeats == 0)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  border: Border.all(color: Colors.orange),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'This package is fully booked. No seats available.',
+                        style: TextStyle(
+                          color: Colors.orange.shade900,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Confirm Button
             SizedBox(
               height: 56,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _createBooking,
+                onPressed: (_isLoading || widget.package.availableSeats == 0) 
+                    ? null 
+                    : _createBooking,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
@@ -234,9 +261,11 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'CONFIRM BOOKING',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    : Text(
+                        widget.package.availableSeats == 0 
+                            ? 'FULLY BOOKED' 
+                            : 'CONFIRM BOOKING',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
               ),
             ),

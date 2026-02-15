@@ -33,7 +33,7 @@ class BookingService {
     return [];
   }
 
-  static Future<bool> createBooking({
+  static Future<Map<String, dynamic>> createBooking({
     required String packageId,
     required int seats,
     required String travelDate,
@@ -41,9 +41,15 @@ class BookingService {
   }) async {
     try {
       final token = await AuthService.getToken();
-      if (token == null) return false;
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Please log in to create a booking'
+        };
+      }
 
       print('🔵 Creating booking for package: $packageId');
+      print('🔵 Seats: $seats, Date: $travelDate, Payment: $paymentMethod');
 
       final response = await http.post(
         Uri.parse(ApiConfig.BOOKINGS),
@@ -60,11 +66,34 @@ class BookingService {
       );
 
       print('🟢 Create Booking Status: ${response.statusCode}');
+      print('🟢 Response Body: ${response.body}');
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': 'Booking created successfully!'
+        };
+      } else {
+        // Parse error message from backend
+        try {
+          final errorData = jsonDecode(response.body);
+          return {
+            'success': false,
+            'message': errorData['message'] ?? 'Failed to create booking'
+          };
+        } catch (e) {
+          return {
+            'success': false,
+            'message': 'Failed to create booking. Status: ${response.statusCode}'
+          };
+        }
+      }
     } catch (e) {
       print('🔴 Create booking error: $e');
-      return false;
+      return {
+        'success': false,
+        'message': 'Network error. Please check your connection and try again.'
+      };
     }
   }
 

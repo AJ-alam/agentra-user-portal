@@ -284,17 +284,57 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                 ],
               ),
               child: SafeArea(
-                child: CustomButton(
-                  text: 'Book Now',
-                  onPressed: () {
-                    if (_package != null) {
-                      Navigator.pushNamed(
-                        context,
-                        '/booking-form',
-                        arguments: _package,
-                      );
-                    }
-                  },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Availability indicator
+                    if (_package!.availableSeats <= 5)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _package!.availableSeats == 0 
+                                  ? Icons.event_busy 
+                                  : Icons.warning_amber_rounded,
+                              size: 16,
+                              color: _package!.availableSeats == 0 
+                                  ? Colors.red 
+                                  : Colors.orange,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _package!.availableSeats == 0
+                                  ? 'Fully Booked'
+                                  : 'Only ${_package!.availableSeats} seats left!',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: _package!.availableSeats == 0 
+                                    ? Colors.red 
+                                    : Colors.orange.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    CustomButton(
+                      text: _package!.availableSeats == 0 
+                          ? 'Fully Booked' 
+                          : 'Book Now',
+                      onPressed: _package!.availableSeats == 0 
+                          ? null 
+                          : () {
+                              if (_package != null) {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/booking-form',
+                                  arguments: _package,
+                                );
+                              }
+                            },
+                    ),
+                  ],
                 ),
               ),
             ),
