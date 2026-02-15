@@ -1,5 +1,5 @@
+# Manual deployment - build locally and deploy the build/web folder
 [build]
-  command = "chmod +x build.sh && ./build.sh"
   publish = "build/web"
 
 [[redirects]]
